@@ -5,19 +5,15 @@
   >
 
     <div class=" hidden mx-auto bg-slate-800 text-gray-400 text-xs rounded-full px-4 py-1.5">اليوم</div>
-
-
-
     <!-- حط في :class = bg-slate-800-->
-    <div class="flex justify-end">
-      <div class="max-w-[70%] bg-green-600 text-white rounded-2xl rounded-tl-sm px-4 py-2.5">
-        <p class="text-sm leading-relaxed">الحمد لله، انت شحالك؟</p>
+    <div v-for="message in props.Messages" :class="message.sender != myId?'justify-start':'justify-end'" class="flex">
+      <div :class="message.sender != myId?'bg-slate-800':'bg-green-600'" class="max-w-[70%]  text-white rounded-2xl rounded-tl-sm px-4 py-2.5">
+        <p class="text-sm leading-relaxed">{{ message.text }}</p>
         <p class="text-[10px] text-green-200 mt-1 flex items-center justify-end gap-1">
-          10:31 م <i class="ri-check-double-line text-xs"></i>
+         {{ message.createdAt }}<i class="ri-check-double-line text-xs"></i>
         </p>
       </div>
     </div>
-
 
     <div class="flex justify-start hidden">
       <div class="max-w-[70%] bg-slate-800 text-white rounded-2xl rounded-tr-sm p-2">
@@ -30,3 +26,36 @@
 
   </div>
 </template>
+
+<script lang="ts" setup>
+import axios from 'axios';
+
+const props = defineProps({
+  Messages:{
+    type:Array,
+    default: [],
+  }
+})
+
+const emit = defineEmits(["changeMessage"]);
+
+const myId = ref<string>("")
+
+onMounted( async() =>{
+const RegisterUser = JSON.parse(localStorage.getItem("registerUser"))||""
+const LoginUser = JSON.parse(localStorage.getItem("getData"))||""
+const RoomName = localStorage.getItem("RoomName")||""
+
+const or = RegisterUser||LoginUser
+
+myId.value = or._id
+try {
+  const reqRes = await axios.get(`http://localhost:9000/message/findMessages/${RoomName}`)
+  console.log(reqRes.data.findMessages)
+  emit("changeMessage",reqRes.data.findMessages)
+} catch (error) {
+  console.log(error.response.data)
+}
+})
+
+</script>

@@ -100,20 +100,24 @@ try {
 })
 
 const OpenChat = (User:UsersTypys) =>{
-save(User._id)
+
 const store  = GlobalVaribal()      
+
 const RegisterUser = JSON.parse(localStorage.getItem("registerUser"))||""
 const LoginUser = JSON.parse(localStorage.getItem("getData"))||""
 const comparison = RegisterUser.name || LoginUser.name
 
 const namesArray = [User.name,RegisterUser.name||LoginUser.name].sort()
-const GroupName = namesArray.join("")
+const SetupGroupName = namesArray.join("")
 
-store.socket.emit("PrChat",GroupName,comparison)
+save(User._id,SetupGroupName)
+
+
 navigateTo("/ChatFriendsPage")
 }
 
-const save = (FrId:string) =>{
+const save = (FrId:string,Room:string) =>{
     localStorage.setItem("FriendUser",FrId)
+    localStorage.setItem("RoomName",Room)
 }
 </script>

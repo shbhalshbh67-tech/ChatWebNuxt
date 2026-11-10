@@ -24,7 +24,7 @@
       </div>
     </header>
 
-    <Chat />
+    <Chat :Messages="MessagesArray" @changeMessage="MessagesArray = $event"/>
 
     <footer>
       <div class="bg-gray-950 border-t-2 border-slate-800 px-4 py-3">
@@ -36,11 +36,11 @@
             <i class="ri-image-add-line text-2xl"></i>
           </button>
 
-          <input dir="rtl" placeholder="اكتب رسالتك هنا..." v-model="Message.text"
+          <input dir="rtl" placeholder="اكتب رسالتك هنا..." v-model="Message.text" @keydown.enter="SendMessage"
                  class="flex-1 h-11 bg-gray-600/55 px-4 text-white rounded-2xl border-2 border-slate-500 focus:border-green-500 focus:outline-none placeholder:text-sm placeholder:text-gray-300" />
 
    
-          <button title="ارسال" @click="SendMessage"
+          <button title="ارسال"  @click="SendMessage" 
                   class="w-11 h-11 rounded-full bg-green-600 text-white hover:bg-green-500 hover:shadow-green-500 hover:shadow-[0_0_15px] transition-all duration-300 flex items-center justify-center flex-shrink-0">
             <i class="ri-send-plane-2-fill text-xl -scale-x-100"></i>
           </button>
@@ -52,28 +52,29 @@
 
 <script setup lang="ts">
 
-interface UsersTypys {
-    _id?:string,
-    name:string,
-    username:string,
-    email:string,
-    password:string,
-    img?:string
-    isAdmin:boolean,
-    requistFriend:UsersTypys[],
-    isUserReqtist?:boolean
-}
-
-interface MessagesData {
+interface MessageObj {
+  RoomName:string
   text:string,
   sender:string,
-  Receiver:string
-}
+  Receiver:string,
+  createdAt?:string
+} 
 
-const Message = ref<MessagesData>({
+const Message = ref<MessageObj>({
+  RoomName:"",
   text:"",
   sender:"",
-  Receiver:""
+  Receiver:"",
+})
+
+const MessagesArray = ref<MessageObj[]>([])
+
+onMounted(() =>{
+  const store = GlobalVaribal()
+const RoomName = localStorage.getItem("RoomName")||""
+Message.value.RoomName = RoomName
+console.log(Message.value.RoomName)
+store.socket.connect()
 })
 
 const SendMessage = () =>{
@@ -87,16 +88,29 @@ const LoginUser = JSON.parse(localStorage.getItem("getData"))||""
 const FriendId = localStorage.getItem("FriendUser")
 const Useror = RegisterUser._id || LoginUser._id
 
+
 Message.value.sender = Useror
 Message.value.Receiver = FriendId
 
 store.socket.emit("SendMessage",Message.value)
 
+store.socket.off("receptionMessage")
+store.socket.on("receptionMessage",(saveMessage:MessageObj) =>{
+console.log(saveMessage)
+console.log("open server message")
+
+const NewDeta = new Date(saveMessage.createdAt);
+const timeDeta = NewDeta.toLocaleTimeString("ar-LY",{
+  hour: '2-digit',
+minute: '2-digit',
+    hour12: true
+})
+
+saveMessage.createdAt = timeDeta
+MessagesArray.value.push(saveMessage)
+})
 Message.value.text = ""
 
-store.socket.on("receptionMessage",(saveMessage) =>{
-console.log(saveMessage)
-})
 }
 
 </script>
