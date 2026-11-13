@@ -45,7 +45,6 @@ onMounted( async() =>{
 const RegisterUser = JSON.parse(localStorage.getItem("registerUser"))||""
 const LoginUser = JSON.parse(localStorage.getItem("getData"))||""
 const RoomName = localStorage.getItem("RoomName")||""
-
 const or = RegisterUser||LoginUser
 
 myId.value = or._id
