@@ -16,7 +16,7 @@
                     <i class="ri-user-heart-line text-lg"></i>
                     <p class="text-sm font-bold">الأصدقاء</p>
                 </div>
-                <span class="text-xs text-gray-400 bg-slate-700/50 rounded-full px-2.5 py-1">3 اصدقاء</span>
+                <span class="text-xs text-gray-400 bg-slate-700/50 rounded-full px-2.5 py-1">{{ FriendsArray.length }} اصدقاء</span>
             </div>
 
             <div v-for="User in FriendsArray" class="p-3 flex flex-col gap-3">
@@ -30,7 +30,7 @@
                         <h5 class="font-bold truncate">{{ User.name }}</h5>
                         <p class="text-sm text-gray-400 truncate flex items-center gap-1">
                             <i class="ri-check-double-line text-green-500 flex-shrink-0"></i>
-                            <span class="truncate">رسالة كتبت حالبة</span>
+                            <span class="truncate">{{ User.lastMessage }}</span>
                         </p>
                     </div>
                     <div class="flex flex-col items-center gap-1.5 flex-shrink-0 ml-3">
@@ -75,8 +75,12 @@ interface UsersTypys {
     isAdmin:boolean,
     requistFriend:UsersTypys[],
     isUserReqtist?:boolean,
-    is_Online:boolean
+    is_Online:boolean,
+    friends:string,
+    lastMessage?:string
 }
+
+
 
 const FriendsArray = ref<UsersTypys[]>([])
 
@@ -90,31 +94,44 @@ const LoginUser = JSON.parse(localStorage.getItem("getData"))||""
 const Useror = RegisterUser._id || LoginUser._id
 //is_Online Socket
 store.socket.emit("OnlineUser",Useror)
+
 try {
+// show Friends List requist
     const reqRes = await axios.get(`http://localhost:9000/users/Friends`,{
         withCredentials:true
     })
     console.log(reqRes.data.findFrindRequist.friends)
     FriendsArray.value = reqRes.data.findFrindRequist.friends
-} catch (error) {
-    console.log(error.response.data)
+
+// show Last text Message requist
+    for(const friend of FriendsArray.value){
+const RoomArray = [RegisterUser.name||LoginUser.name,friend.name].sort();
+const setupRoom = RoomArray.join("").trim();
+
+const reqRes = await axios.get(`http://localhost:9000/message/lastMessage/${setupRoom}`,{
+    withCredentials:true
+});
+console.table(reqRes.data.lastMessage)
+friend.lastMessage = reqRes.data.lastMessage.text
 }
+} catch (error) {
+    console.log(error.response.data.lastMessage)
+}
+
 })
 
 const OpenChat = (User:UsersTypys) =>{
-const store = GlobalVaribal()
 
 const RegisterUser = JSON.parse(localStorage.getItem("registerUser"))||""
 const LoginUser = JSON.parse(localStorage.getItem("getData"))||""
 
 
-const namesArray = [User.name,RegisterUser.name||LoginUser.name].sort()
-const SetupGroupName = namesArray.join("")
+const namesArray = [User.name,RegisterUser.name||LoginUser.name].sort();
+const SetupGroupName = namesArray.join("").trim();
 
+save(User,SetupGroupName);
 
-save(User,SetupGroupName)
-
-navigateTo("/ChatFriendsPage")
+navigateTo("/ChatFriendsPage");
 }
 
 const save = (FrId:string,Room:string) =>{

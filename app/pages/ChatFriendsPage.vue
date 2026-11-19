@@ -1,5 +1,5 @@
 <template>
-  <div class="h-[100vh] flex flex-col bg-slate-900">
+  <div  class="h-[100vh] flex flex-col bg-slate-900">
     <header v-if="FriendUser">
       <div class="bg-gray-950 h-20 text-white px-6 flex items-center gap-3 border-b-2 border-slate-800">
 
@@ -65,7 +65,9 @@ interface MessageObj {
   RoomName:string
   text:string,
   sender:string,
-  Receiver:string,
+  Receiver:{
+    user:string,
+  },
   createdAt?:string
 } 
 
@@ -86,25 +88,36 @@ const Message = ref<MessageObj>({
   RoomName:"",
   text:"",
   sender:"",
-  Receiver:"",
+  Receiver:{
+    user:"",
+  },
 })
 
 const MessagesArray = ref<MessageObj[]>([])
 
 const FriendUser = ref<UsersTypys>(null)
 
-onUnmounted(() =>{
+
+
+onUnmounted(() => {
+  const store = GlobalVaribal()
+  store.socket.emit("LeaveRoom", localStorage.getItem("RoomName"))
+  store.socket.off("ChangeStatusMessage")
+  store.socket.off("receptionMessage")
   localStorage.removeItem("RoomName")
 })
+
 
 onMounted(() =>{
   const store = GlobalVaribal();
 // open socket server
 store.socket.connect()
 
+
 // on messages
 store.socket.off("receptionMessage")
 store.socket.on("receptionMessage",(saveMessage:MessageObj) =>{
+if (MessagesArray.value.some(m => m._id === saveMessage._id)) return
 console.log(saveMessage)
 console.log("open server message")
 
@@ -117,6 +130,15 @@ minute: '2-digit',
 
 saveMessage.createdAt = timeDeta
 MessagesArray.value.push(saveMessage)
+})
+
+store.socket.off("ChangeStatusMessage")
+store.socket.on("ChangeStatusMessage", ({ receiver, is_Read }) => {
+  for (const m of MessagesArray.value) {
+    if (m.Receiver.user === receiver && m.Receiver.is_Read !== "openChat") {
+      m.Receiver.is_Read = is_Read
+    }
+  }
 })
 
 //all localstorg
@@ -151,7 +173,7 @@ const Useror = RegisterUser._id || LoginUser._id
 
 
 Message.value.sender = Useror
-Message.value.Receiver = FriendId._id
+Message.value.Receiver.user = FriendId._id
 
 store.socket.emit("SendMessage",Message.value)
 
@@ -170,5 +192,7 @@ message.createdAt = timeDeta
 }
 MessagesArray.value = event
 }
+
+
 
 </script>

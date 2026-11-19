@@ -1,5 +1,5 @@
 <template>
-  <div
+  <div ref="mainDev"
     class="flex-1 min-h-0 overflow-y-auto bg-slate-900 px-4 py-5 flex flex-col gap-3
            [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full"
   >
@@ -10,7 +10,12 @@
       <div :class="message.sender != myId?'bg-slate-800':'bg-green-600'" class="max-w-[70%]  text-white rounded-2xl rounded-tl-sm px-4 py-2.5">
         <p class="text-sm leading-relaxed">{{ message.text }}</p>
         <p class="text-[10px] text-green-200 mt-1 flex items-center justify-end gap-1">
-         {{ message.createdAt }}<i class="ri-check-double-line text-xs"></i>
+         {{ message.createdAt }}
+         <div v-if="message.sender === myId">
+         <i v-if="message.Receiver.is_Read === 'openChat'" class="ri-check-double-line text-xs text-sky-400"></i>
+         <i v-else-if="message.Receiver.is_Read === 'openApp'" class="ri-check-double-line text-xs"></i>
+          <i v-else class="ri-check-line text-xs"></i>
+          </div>
         </p>
       </div>
     </div>
@@ -37,6 +42,8 @@ const props = defineProps({
   }
 })
 
+const mainDev = ref<HTMLElement | null>(null)
+
 const emit = defineEmits(["changeMessage"]);
 
 const myId = ref<string>("")
@@ -55,6 +62,14 @@ try {
 } catch (error) {
   console.log(error.response.data)
 }
+})
+
+watch(() => props.Messages.length, async () => {
+  await nextTick()
+
+  if (mainDev.value) {
+    mainDev.value.scrollTop = mainDev.value.scrollHeight;
+  }
 })
 
 </script>
