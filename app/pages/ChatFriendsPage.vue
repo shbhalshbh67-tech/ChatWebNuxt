@@ -181,7 +181,9 @@ Message.value.text = ""
 }
 
 const findOldMessage = (event:MessageObj[]) =>{
+  // loop on old messages and change time then enter in MessageArray
 for(const message of event){
+//change time 12 clock class oop
 const NewDeta = new Date(message.createdAt);
 const timeDeta = NewDeta.toLocaleTimeString("ar-LY",{
   hour: '2-digit',
